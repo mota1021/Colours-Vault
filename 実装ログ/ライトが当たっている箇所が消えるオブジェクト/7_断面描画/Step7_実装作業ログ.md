@@ -85,6 +85,6 @@
 
 ### 知見
 
-- UE で型変更（`UStaticMeshComponent` → `UDynamicMeshComponent`）する際は、`FName`（サブオブジェクト名）とメンバー変数名の **両方** をリネームしないと、BP 派生クラスをリコンパイルしても旧名のサブオブジェクトが .uasset に残りプロパティが null になる（→ [[DebuggingPlaybook]] 参照）。
+- UE で型変更（`UStaticMeshComponent` → `UDynamicMeshComponent`）する際は、`FName`（サブオブジェクト名）とメンバー変数名の **両方** をリネームしないと、BP 派生クラスをリコンパイルしても旧名のサブオブジェクトが .uasset に残りプロパティが null になる。
 - UE の Two Sided マテリアルは裏面の法線を自動反転する。Normal ノードを TwoSidedSign でさらに反転させると二重反転になるため、Normal 入力は未接続が正解。
 - ヒット判定の重処理（`PerformConeTrace` 20Hz）と視覚更新（`Tick` 60fps）は頻度を分離するとよい。
