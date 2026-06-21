@@ -1,0 +1,127 @@
+# Step5 実装ログ: コリジョン消去（セグメント方式）
+
+## 実装日
+2026-06-13
+
+## 対応バックログ
+[[実装バックログ]] > Step5: コリジョン消去（コーン型コリジョン＋通過フラグ）
+
+---
+
+## 当初のバックログ案
+
+コーン型 StaticMesh をアタッチし Overlap で検知。プレイヤーが `BeginOverlap` → `ErasableWall` への Collision Response を `Ignore`（通過可能）、`EndOverlap` で `Block` に戻す。
+
+**完了条件（当初）**: コーン内に入ると `ErasableWall` を通過でき、コーン外に出ると再び塞がれる。
+
+## 当初案の問題点
+
+バックログ案（プレイヤーの ErasableWall CollisionResponse を BeginOverlap で一括 Ignore）は、壁の**非照射部分もすり抜け可能**になる欠陥があった。
+
+---
+
+## 採用した方式: セグメント分割コリジョン
+
+壁を N 個の `UBoxComponent` セグメントに分割し、コーン内に入ったセグメントのみ `NoCollision` に切り替える方式を採用。
+
+### AErasableWall（新規クラス）
+
+| コンポーネント | 役割 | コリジョン設定 |
+|---|---|---|
+| `VisualMesh` | 見た目専用 | NoCollision |
+| `DetectionBox` | コーントレース検出専用 | QueryOnly / ECC_Visibility のみ Block |
+| `Segments` (×N) | プレイヤーブロック | ECC_GameTraceChannel1, Block |
+
+- セグメントはローカル Y 軸方向に等分割（`SegmentCount` で調整可）
+- `WallHalfExtent` を変更すると `OnConstruction` で自動再構築
+
+### AColoursConeLight の変更点
+
+- `OnConeBeginOverlap` / `OnConeEndOverlap` を削除
+- `UpdateErasableWallSegments()` を追加：トレース後に各セグメント中心のコーン内外を内積で判定し Enable/Disable を切り替える
+
+---
+
+## 発生したバグと対処
+
+**症状**: 実装直後、コーンを壁に当ててもプレイヤーがすり抜けられない。
+
+**原因**: `VisualMesh` はメッシュアセット未割当 → コリジョンジオメトリなし → `ECC_Visibility` トレースが壁をスルー → `UpdateErasableWallSegments` が呼ばれない → セグメントが無効化されず常時ブロック。
+
+**対処**: `VisualMesh` の Visibility 応答を廃止。専用の `DetectionBox`（UBoxComponent）を追加し、メッシュアセット依存なく確実にトレースを受け取れる構成に変更。
+
+---
+
+## 発生したバグと対処（追記）
+
+### バグ2：AErasableWall を置いてもすり抜けられない
+
+**症状**: AErasableWall クラスに差し替えても、コーンを当てても一切すり抜けられない。
+
+**原因**: レベルに置いてある壁が `AErasableWall` ではなく素の `StaticMeshActor` だった。
+`VisualMesh` にメッシュが未割当のため AErasableWall を配置しても見えず、見える壁として
+通常の StaticMesh をレベルに置いていた。その結果 `UpdateErasableWallSegments` の
+`Cast<AErasableWall>` が常に null となりセグメント無効化ロジックが一度も起動していなかった。
+（診断ログ `[DIAG] Seg[...]` が皆無だったことで確定）
+
+**対処**: レベルの壁を `AErasableWall` インスタンスに差し替える。
+`AErasableWall` の可視化は VisualMesh にメッシュをアサインするか、BP サブクラスで設定。
+
+### バグ3：セグメント／DetectionBox が床下に半分埋まる
+
+**症状**: `show Collision` でコリジョンが VisualMesh より Z 方向にずれている。
+
+**原因**: `VisualMesh` は底面中心が原点（Z: 0〜+高さ）だが、セグメントと DetectionBox は
+アクター原点中心（Z: −WallHalfExtent.Z〜+WallHalfExtent.Z）に配置されていた。
+結果としてコリジョンが床面より半分下に埋まっていた。
+
+**対処**: `ErasableWall.cpp::RebuildSegments` で DetectionBox と各 Segment の Z オフセットに
+`+WallHalfExtent.Z` を追加し、底面を原点に合わせた。
+
+**解決**: コーンを当てた壁をすり抜ける際にキャラが浮く・段差を登る挙動が発生していた。
+
+**原因**: `DetectionBox`（`QueryOnly`）が Pawn チャンネルをブロックしており、
+CharacterMovement の床判定スイープ（Pawn チャンネル）が DetectionBox を「床」として認識。
+その面に乗り上げてキャラが浮いていた。
+ユーザー検証で DetectionBox を3倍スケールにすると顕著に浮くことで確定。
+C++ コンストラクタで `ECR_Ignore` を設定していたが、
+配置インスタンス/Blueprint 側でコリジョンが上書きされていたのが根本原因。
+
+**対処**: コーントレースを `ECC_Visibility` 相乗りから専用チャンネル `ECC_GameTraceChannel2`（"ConeTrace"）に分離。
+- `DefaultEngine.ini`：ConeTrace チャンネル追加（TraceType / DefaultResponse=Ignore）。
+- `DetectionBox`：全チャンネル Ignore、ConeTrace のみ Block。`SetCanCharacterStepUpOn(ECB_No)` 追加。
+- `Segments`：ConeTrace を Ignore（トレースが素通りして DetectionBox に届く）。
+- `PerformConeTrace`：`ECC_GameTraceChannel2` を使用。
+
+これにより DetectionBox が Pawn/Object チャンネルに関与せず、浮き・段差が解消。
+
+（※ FloorSink=10 で底辺コーナーを床下に埋める修正は副次的な対策として残している）
+
+---
+
+## 関連コミット
+
+- `feat(Step5): AErasableWall セグメントコリジョン方式に置き換え`
+- `fix(ErasableWall): DetectionBox を追加してコーントレース未検出を修正`
+- `fix(ErasableWall): segment/DetectionBox Z alignment to bottom-face origin`
+- `fix(ErasableWall): extend segments below floor to prevent step-up at wall base`
+- `fix(ErasableWall): replace Visibility trace with dedicated ConeTrace channel`
+- `fix(ErasableWall): fix SetCanCharacterStepUpOn compile error`
+- `feat(ErasableWall): subdivide segments in 3D grid for depth-accurate cone erasure`
+
+---
+
+## Step5 完了確認
+
+- コーン照射部のセグメントが無効化され、プレイヤーが通過できる ✓
+- 浮き・段差乗り越えなしでスムーズにすり抜けられる ✓
+- コーンを外すと `RestoreAllSegments` で再ブロックされる ✓
+
+---
+
+## 次の Step への申し送り
+
+- Step8（負荷調整）で `NumTraces` と更新頻度を調整する。セル数が増えたので `UpdateErasableWallSegments` の
+  呼び出しコストも要計測（96セル×壁数）。
+- 複数光源が同じ壁を照射した場合、セグメントの Enable/Disable が上書き競合する可能性あり（Step8 で検討）
+- セグメント3D分割・断面描画は **Step6/Step7** として独立化 → [[実装ログ/Step6_セグメント3D分割]] / [[実装ログ/Step7_断面描画]]
