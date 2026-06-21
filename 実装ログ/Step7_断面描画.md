@@ -334,6 +334,24 @@ Normal 入力への接続をすべて外す（未接続にする）。
 
 ---
 
+---
+
+### 追加修正: ConeSectionPlug リファクタリング（2026-06-20）
+
+**変更内容**: `ConeSectionMesh`（`UStaticMeshComponent`）→ `ConeSectionPlug`（`UDynamicMeshComponent`）へ型変更。
+
+**理由**: Engine Cone（/Engine/BasicShapes/Cone）は分割数が固定で縁がカクつく。GeometryScript で `ConeSectionRadialSteps` 分割の高精細コーンを実行時生成することで解消。
+
+**BP null クラッシュの罠**: 型変更後に BP 派生クラスをリコンパイルしても、旧サブオブジェクト名 `ConeSectionMesh` が .uasset 内に残りプロパティが null になった。`FName`（`TEXT("ConeSectionMesh")` → `TEXT("ConeSectionPlug")`）とメンバー変数名を両方リネームすることで解消（→ [[DebuggingPlaybook]] 参照）。
+
+**追加 API**:
+- `RebuildConeSectionPlug()`: `UDynamicMeshComponent` に `AppendCone`（Engine Cone と同寸法）を生成
+- `ConeSectionRadialSteps`（UPROPERTY, 既定 64, max 1024）: 分割数を外部から調整可能
+
+**ColoursConeLight 変更**: `PerformConeTrace`（20Hz）から `ApplyMIDParams` + `UpdateConeSection` の呼び出しを削除し、`Tick`（60fps）に移管。ヒット判定の重処理と視覚更新の頻度を分離。
+
+---
+
 ## 次の Step への申し送り
 
 - Step8（負荷調整）へ → [[Step8_負荷調整]]
