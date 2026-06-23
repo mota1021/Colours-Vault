@@ -186,3 +186,6 @@ WritePermissions.*.temp
 *.swp
 .git/
 *.log
+
+# === Obsidian
+.obsidian/
