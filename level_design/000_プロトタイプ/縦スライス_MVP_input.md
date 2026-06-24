@@ -1,11 +1,11 @@
 ---
 tags: [Colours, 縦スライス, input]
-related_output: "[[_縦スライス_MVP]]"
+related_output: "[[縦スライス_MVP]]"
 ---
 
 # 縦スライス ラフ: ギミック①「光で壁を消す」
 
-> このファイルは `_縦スライス_MVP.md`（output）の元ネタとなるラフ案。
+> このファイルは `縦スライス_MVP.md`（output）の元ネタとなるラフ案。
 > outputの内容を変えたいときはこちらを編集してClaudeに再整形を依頼する。
 
 ---
