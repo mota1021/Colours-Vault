@@ -17,7 +17,7 @@ import argparse
 import sys
 from pathlib import Path
 
-DEFAULT_ROOT = Path(__file__).parent
+DEFAULT_ROOT = Path(__file__).parent.parent.parent  # shared/Vault整理スクリプト → shared → Colours
 
 
 def fix_links(root: Path, old: str, new: str, dry_run: bool) -> None:
