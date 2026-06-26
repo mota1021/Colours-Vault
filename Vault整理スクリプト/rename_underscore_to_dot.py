@@ -136,20 +136,36 @@ def move_colour_system(dry_run: bool) -> list[tuple[str, str]]:
     return link_pairs
 
 
+def _build_replacer(pairs: list[tuple[str, str]]):
+    """
+    置換ペアを「最長一致・1パス」で適用する関数を返す。
+
+    sequential replace() の連鎖適用が原因で起きる指数的プレフィックス増殖を防ぐ。
+    旧実装では replace() を順番に呼ぶため、後の置換が前の置換で生まれた文字列に
+    再度マッチし、短いプレフィックスが再帰的に連鎖する問題があった。
+    regex alternation + longest-first sort により各位置をちょうど1回だけ処理する。
+    """
+    if not pairs:
+        return None, None
+    # 長い旧文字列から順に試す（短い部分文字列が先にマッチするのを防ぐ）
+    sorted_pairs = sorted(pairs, key=lambda p: len(p[0]), reverse=True)
+    pattern = re.compile('|'.join(re.escape(old) for old, _ in sorted_pairs))
+    lookup = {old: new for old, new in sorted_pairs}
+    return pattern, lookup
+
+
 def update_links(extra_pairs: list[tuple[str, str]], dry_run: bool) -> None:
-    """全 .md ファイル内のリンク・パス参照を一括置換。"""
-    # extra_pairs: (old_str, new_str) — ファイル内テキストをそのまま置換
+    """全 .md ファイル内のリンク・パス参照を一括置換（1パス・再帰なし）。"""
     if not extra_pairs:
         return
 
+    pattern, lookup = _build_replacer(extra_pairs)
     label = "[DRY RUN] " if dry_run else ""
     changed_files = 0
 
     for md in sorted(SHARED_ROOT.rglob("*.md")):
         text = md.read_text(encoding="utf-8")
-        new_text = text
-        for old_str, new_str in extra_pairs:
-            new_text = new_text.replace(old_str, new_str)
+        new_text = pattern.sub(lambda m: lookup[m.group(0)], text)
         if new_text != text:
             print(f"  {label}LINKS  {md.relative_to(SHARED_ROOT)}")
             if not dry_run:
