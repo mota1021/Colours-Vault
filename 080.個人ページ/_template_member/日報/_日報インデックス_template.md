@@ -16,12 +16,10 @@ updated: {{DATE}}
 
 ---
 
-## 最近の日報
+## 日報一覧
 
-<!-- 最新から順にリンクを追加していく -->
-
----
-
-## アーカイブ
-
-`日報\archive\` — 古い日報を格納
+```dataview
+LIST
+FROM "080.個人ページ/{{MEMBER}}/日報/archive"
+SORT date DESC
+```
