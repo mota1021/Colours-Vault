@@ -24,7 +24,7 @@ updated: {{DATE}}
 
 `個人ページ/{{MEMBER}}/日報/archive/日報_YYYYMMDD.md` が存在するか確認してください。
 
-- **存在しない場合**: [[_日報_template]] を元に作成し、frontmatter の `date`・`member` と見出しの日付を今日の値に書き換えてください。
+- **存在しない場合**: [[創作/ゲーム/Colours/shared/080.個人ページ/_template_member/日報/_日報_template]] を元に作成し、frontmatter の `date`・`member` と見出しの日付を今日の値に書き換えてください。
 - **存在する場合**: そのファイルを使用してください。
 
 ### 3. 「今日やったこと」を生成する
