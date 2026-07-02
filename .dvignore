@@ -189,3 +189,7 @@ WritePermissions.*.temp
 
 # === Obsidian
 .obsidian/
+
+# === Python (Vault整理スクリプト用)
+__pycache__/
+*.pyc
