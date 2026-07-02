@@ -12,6 +12,8 @@ updated: {{DATE}}
 - **対象メンバー**: {{MEMBER}}
 - **UEProjectパス**: `{{UE_PROJECT_PATH}}`
 
+> ℹ️ **Claude Codeスキル版が正本**: `colours-nippou` スキルが正本。本ファイルは非Claude-Codeメンバー向けの手動プロンプト版。
+
 ---
 
 ## 手順

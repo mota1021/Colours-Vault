@@ -30,7 +30,7 @@ from pathlib import Path
 WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]")
 PATH_REF_RE = re.compile(r"`([^`\s]+/[^`\s]+\.md)`")
 
-PLACEHOLDER_TOKEN_RE = re.compile(r"<[^<>]+>|\{\{[^{}]+\}\}")
+PLACEHOLDER_TOKEN_RE = re.compile(r"<[^<>]+>|\{\{[^{}]+\}\}|\{[^{}]+\}")
 PLACEHOLDER_MARKERS = ("YYYY", "NNN", "XXX")
 # archive/ とテンプレート系(_で始まるフォルダ・ファイル)は「スキャン対象(参照元)」からは除外する。
 # ただし他ファイルからそこへ向かうリンクは正当なので、basenameインデックス(リンク先)には含める。
