@@ -30,17 +30,24 @@ from pathlib import Path
 WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]")
 PATH_REF_RE = re.compile(r"`([^`\s]+/[^`\s]+\.md)`")
 
-PLACEHOLDER_MARKERS = ("<", ">", "{{", "}}", "YYYY", "NNN", "XXX")
-EXCLUDED_DIR_NAMES = ("archive",)
+PLACEHOLDER_TOKEN_RE = re.compile(r"<[^<>]+>|\{\{[^{}]+\}\}")
+PLACEHOLDER_MARKERS = ("YYYY", "NNN", "XXX")
+# archive/ とテンプレート系(_で始まるフォルダ・ファイル)は「スキャン対象(参照元)」からは除外する。
+# ただし他ファイルからそこへ向かうリンクは正当なので、basenameインデックス(リンク先)には含める。
+EXCLUDED_SCAN_DIR_NAMES = ("archive",)
 IMPL_LOG_MARKER = "実装ログ"
 
 
 def has_placeholder(text):
+    if PLACEHOLDER_TOKEN_RE.search(text):
+        return True
     return any(marker in text for marker in PLACEHOLDER_MARKERS)
 
 
-def is_excluded(path):
-    return any(part in EXCLUDED_DIR_NAMES for part in path.parts)
+def is_excluded_from_scan(path):
+    if any(part in EXCLUDED_SCAN_DIR_NAMES for part in path.parts):
+        return True
+    return any(part.startswith("_") for part in path.parts)
 
 
 def is_impl_log(path):
@@ -57,11 +64,13 @@ def find_vault_root(start):
 
 
 def build_basename_index(vault_root):
-    """Vault全体の .md を basename(拡張子なし) -> [Path,...] で索引化する（archiveは除外）"""
+    """Vault全体の .md を basename(拡張子なし) -> [Path,...] で索引化する。
+
+    archive/やテンプレートも「リンク先」としては正当なため索引から除外しない
+    （除外するのは後述の「スキャン対象(参照元)」のみ）。
+    """
     index = {}
     for md_path in vault_root.rglob("*.md"):
-        if is_excluded(md_path):
-            continue
         index.setdefault(md_path.stem, []).append(md_path)
     return index
 
@@ -142,7 +151,7 @@ def main():
     total_findings = 0
     for root in roots:
         for md_path in sorted(root.rglob("*.md")):
-            if is_excluded(md_path):
+            if is_excluded_from_scan(md_path):
                 continue
             findings = check_file(md_path, basename_index, cwd, vault_root)
             for lineno, message in findings:
