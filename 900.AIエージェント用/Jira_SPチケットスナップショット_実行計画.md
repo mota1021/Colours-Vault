@@ -19,23 +19,25 @@
 - 記録項目: `ID / 仕様名 / 状態 / 対応実装チケット / 先行チケット / 着手開始日 / Jiraキー`
 - 対象範囲: 現在のマイルストーンのSPチケットのみ
 
-## 1. API初期設定
+## 1. API初期設定（完了済み・2026-07-03確認）
 
-`D:\document\ObsidianVault\.env` に以下を追記する（実際の値はユーザーのAtlassianアカウント情報。Claudeは推測できないため、実行時にユーザーへ入力を依頼する）:
+`D:\document\ObsidianVault\.env` に以下の4変数が設定済みであることを確認した:
 
 ```
 JIRA_BASE_URL=https://<サイト名>.atlassian.net
 JIRA_EMAIL=<Atlassianログインメール>
 JIRA_API_TOKEN=<id.atlassian.comで発行したAPIトークン>
-```
-
-APIトークンは https://id.atlassian.com/manage-profile/security/api-tokens で発行する（ユーザー操作、Claudeは代行不可）。
-
-さらに、現在のマイルストーンを示すEpicキーを `.env` に追記する:
-```
 CURRENT_MILESTONE_EPIC=SCRUM-5
 ```
-マイルストーンが進んだら（M1→M2等）、この値を手動で更新する。
+
+APIトークンの再発行が必要になった場合は https://id.atlassian.com/manage-profile/security/api-tokens で発行する（ユーザー操作、Claudeは代行不可）。
+マイルストーンが進んだら（M1→M2等）、`CURRENT_MILESTONE_EPIC` の値を手動で更新する。
+
+### 使用エンドポイント（重要）
+
+**`/rest/api/3/search` は廃止済み（HTTP 410 Gone、2026-07-03実測）。`/rest/api/3/search/jql` を使うこと。** 新エンドポイントは旧版と以下の点で挙動が異なる:
+- `fields` パラメータを明示指定しないと `key` すら返さない（`fields=summary,status,labels,issuelinks` を指定する）
+- ページネーションは `startAt`/`total` 方式ではなく `nextPageToken`/`isLast` 方式
 
 ### 疎通確認結果（2026-07-01実施・確定）
 
@@ -49,21 +51,26 @@ CURRENT_MILESTONE_EPIC=SCRUM-5
 | Jiraキー | `key` | `SCRUM-54` |
 | 現在のマイルストーン | `parent`（Epic Link）。現在は `.env` の `CURRENT_MILESTONE_EPIC` で固定値管理 | `SCRUM-5`（M1 MVP） |
 | 対応実装チケット | `issuelinks` のうち `type.name == "Blocks"` かつ `outwardIssue` を持つもの（このSPが実装側をブロックしている＝実装が待っている） | `SCRUM-19, SCRUM-21, SCRUM-22, SCRUM-23` |
-| 先行チケット | 同じ `issuelinks` のうち `inwardIssue` を持つもの（このSPが逆にブロックされている側）。SP-1では0件だったが構造は確認済み | - |
+| 先行チケット | `issuelinks` のうち `type.name == "Blocks"` かつ `inwardIssue` を持つもの（このSPが逆にブロックされている側）。`type.name` の条件を外すと Blocks 以外のリンク種別を誤検出するため必須。SP-1では0件だったが構造は確認済み | - |
 
-**JQL（案）**: `project = SCRUM AND parent = {CURRENT_MILESTONE_EPIC} AND labels = "分類:仕様策定"`
+**JQL（確定）**: `project = SCRUM AND parent = {CURRENT_MILESTONE_EPIC} AND labels = "分類:仕様策定"`
+
+2026-07-03に `/rest/api/3/search/jql` で実行し動作確認済み。4件ヒット（SP-1, SP-4, SP-7, SP-11）、`isLast=true`、対応実装チケット・先行チケットのリンク構造も期待通りだった。
 
 ## 2. スクリプト要件リスト
 
 `創作/ゲーム/Colours/shared/900.AIエージェント用/scripts/jira_sp_snapshot.py`（次回作成予定）に対する要件:
 
-1. **認証**: `.env` から `JIRA_BASE_URL` / `JIRA_EMAIL` / `JIRA_API_TOKEN` を読み込み、Basic認証でJira REST API v3にアクセスする。
-2. **対象データ**: Colours プロジェクト（SCRUM）のうち、現在のマイルストーンに属するSPチケットのみを取得する（絞り込み条件は §1 の疎通確認で確定した内容を使う）。
-3. **取得・整形項目**: `ID(SP番号) / 仕様名(summary) / 状態(status.name) / 対応実装チケット / 先行チケット / Jiraキー` を抽出する。
+1. **認証**: `.env` から `JIRA_BASE_URL` / `JIRA_EMAIL` / `JIRA_API_TOKEN` を読み込み、Basic認証でJira REST API v3にアクセスする。`.env` の読み込みは python-dotenv に依存せず手動パースする（`KEY=VALUE` 形式を1行ずつ分割。依存ライブラリを `requests` のみに保つ。2026-07-03の検証スクリプトで実証済みの方式）。
+2. **対象データ**: Colours プロジェクト（SCRUM）のうち、現在のマイルストーンに属するSPチケットのみを取得する（絞り込み条件は §1 の疎通確認で確定した内容を使う）。エンドポイントは `/rest/api/3/search/jql`（旧 `/search` は410で使用不可）。`fields=summary,status,labels,issuelinks` を必ず明示指定する（未指定だと `key` すら返らない）。
+3. **取得・整形項目**: `ID(SP番号) / 仕様名(summary) / 状態(status.name) / 対応実装チケット / 先行チケット / Jiraキー` を抽出する。対応実装チケット・先行チケットはいずれも `issuelinks` のうち `type.name == "Blocks"` のものに限定し、前者は `outwardIssue`、後者は `inwardIssue` を持つものとする。
 4. **既存データの保持**: 出力先ファイルに既存の「着手開始日」列があれば、Jira側にはない情報のため上書きせず保持する。
 5. **冪等性**: 何度実行しても安全な結果になること（既存行は上書き、新規SPチケットは追加、対象マイルストーン外になった行は削除）。
 6. **実行手段**: スクリプト単体実行に加えて、`run_jira_sp_snapshot.bat`（`python jira_sp_snapshot.py` を呼ぶだけの薄いラッパー）を用意し、Claude Codeを介さずタスクスケジューラや手動実行でも動かせるようにする。
 7. **エラー処理**: 認証失敗（401）・APIトークン期限切れ・対象0件のケースで、原因が分かるメッセージを出して異常終了する（サイレント失敗させない）。
+8. **ページネーション**: レスポンスの `isLast` が `true` になるまで `nextPageToken` を渡してループし、全件取得する（現在は4件だがSPチケット増加に備える）。
+9. **エンコーディング**: 出力mdの読み書きは `encoding='utf-8'` を明示する（Windows既定のcp932による文字化け防止。2026-07-03の検証時にコンソール出力で文字化けを実際に確認済み）。
+10. **最終更新日時**: スナップショットmdのテーブル上部に「最終更新: YYYY-MM-DD HH:MM」の1行を出力し、実行のたびに更新する（データの鮮度を判別できるようにする）。
 
 ## 3. 処理の計画（スクリプト内の処理ステップ）
 
