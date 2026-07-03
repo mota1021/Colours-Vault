@@ -37,7 +37,7 @@ created: 2026-07-02
 
 ## Task 1: 計画ドキュメントの再起動セッション【最優先・企画日1回】
 
-- [ ] Task 1
+- [x] Task 1
 
 **対象ファイル**: `個人計画/今週目標.md`, `個人計画/今月目標.md`, `個人計画/今日やる事.md`, `shared/070.開発/070.020.現在地.md`
 
@@ -49,7 +49,7 @@ created: 2026-07-02
 
 ## Task 2: 鮮度ガードの組み込み
 
-- [ ] Task 2
+- [x] Task 2
 
 **対象ファイル**: `.claude/skills/colours-start/SKILL.md`, E:側 `CLAUDE.md`（後続・ローカル）
 
@@ -63,7 +63,7 @@ created: 2026-07-02
 
 ## Task 3: ロードマップ再計算セッション【企画日・ユーザーと対話】
 
-- [ ] Task 3
+- [x] Task 3
 
 **対象ファイル**: `shared/070.開発/070.010.ロードマップ.md`
 
@@ -75,7 +75,7 @@ created: 2026-07-02
 
 ## Task 4a: 仕様WF複合方式 — 規約改訂
 
-- [ ] Task 4a
+- [x] Task 4a
 
 **対象ファイル**: `shared/050.仕様/050.000.概要と規約.md`, `050.001.テンプレート/001.001.仕様規約.md`, `001.010.ラフ.md`
 
@@ -90,7 +90,7 @@ created: 2026-07-02
 
 ## Task 4b: 新スキル `colours-spec-interview` 作成
 
-- [ ] Task 4b
+- [x] Task 4b
 
 **対象ファイル**: `.claude/skills/colours-spec-interview/SKILL.md`（新規）
 
@@ -109,7 +109,7 @@ created: 2026-07-02
 
 ## Task 4c: `colours-spec-from-rough` 改修（変更系の強化）
 
-- [ ] Task 4c
+- [x] Task 4c
 
 **対象ファイル**: `.claude/skills/colours-spec-from-rough/SKILL.md`
 
@@ -124,7 +124,7 @@ created: 2026-07-02
 
 ## Task 4d: パイロット実施【企画日・ユーザーと対話】
 
-- [ ] Task 4d
+- [x] Task 4d
 
 **作業内容**: SP未完チケット（Jira SCRUM-54〜67のうちラフ未記入のもの）1件を `colours-spec-interview` で策定し、続けて小変更を1回ラフ追記→差分再生成で回す。人間の入力時間・レビュー指摘数をメモし、規約・チェックリストを修正。
 
@@ -149,7 +149,7 @@ created: 2026-07-02
 
 ## Task 6: 二重正本の整合チェックリスト【低優先】
 
-- [ ] Task 6
+- [x] Task 6
 
 **対象ファイル**: `個人計画/運用ガイド.md`
 
