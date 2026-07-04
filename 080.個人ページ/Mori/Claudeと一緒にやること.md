@@ -1,7 +1,6 @@
 - [ ] E:側残課題の回収（Colours改善計画 Task 5・次回実装日前）
 	- /fewer-permission-prompts で許可リスト拡張・/mcp で taskmaster-ai/unreal-mcp 棚卸し・dv commit時の実装ログフック実挙動確認
 	- [[Colours改善計画_実行計画]] Task 5 参照（Task 1〜4・6 は 2026-07-03 完了）
-- [x] [[Jira_SPチケットスナップショット_実行計画]]の残り（2026-07-04 完了。スクリプト・bat・スキル colours-sp-snapshot・スナップショット初回生成済み）
 - [ ] Jiraのチケット整理
 - [ ] Hiruta との非同期コミュニケーション方法を考える（#2 の代替案）
 	- 定例（週1同期）以外で非同期でうまく回す方法を検討する
