@@ -3,3 +3,7 @@
 - [ ] Hiruta との非同期コミュニケーション方法を考える（#2 の代替案）
 	- 定例（週1同期）以外で非同期でうまく回す方法を検討する
 	- 決定したらコミュニケーション方針.md として shared/規約/ に作成
+- [ ] ビルド環境調査（UE5.3想定 vs 実際に呼ばれたビルドツールがUE5.8系）
+	- CS-3実装（[[260705.CS-3照合判定関数]]）でColoursモジュールのビルド確認時に発覚
+	- `.uproject`/`Target.cs` の設定は5.3向けで正しいが、UnrealBuildToolがUE5.8系のものを使ってしまい設定不一致エラー（"Colours has build products in common with UnrealGame"）
+	- マシン上のUE5.3インストール先を要確認（Program Files配下では見つからず）
