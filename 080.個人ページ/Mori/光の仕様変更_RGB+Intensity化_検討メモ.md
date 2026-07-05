@@ -2,7 +2,7 @@
 tags: [Colours, 検討メモ, 光]
 project: Colours
 date: 2026-06-27
-status: 検討中
+status: 解決済み
 ---
 
 # 光の仕様変更: CMY型 → RGB(正規化)+Intensity への移行
