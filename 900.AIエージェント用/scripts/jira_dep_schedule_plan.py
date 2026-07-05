@@ -46,12 +46,15 @@ FROZEN_DUE = {
 }
 
 # MVP クリティカルパス（レーン先頭に来るよう最優先）
-MVP_PRIORITY = {"CS-3", "EW-5", "EW-4", "PL-2", "PL-3", "MVP-LV", "MVP-GE"}
+# 2026-07-05 確定: PL-3b（SCRUM-68・モノを固定設置）を MVP必須として追加
+MVP_PRIORITY = {"CS-3", "EW-5", "EW-4", "PL-2", "PL-3", "PL-3b", "MVP-LV", "MVP-GE"}
 
 # ── 設計DAG（元ID: [先行元ID]）: 010_チケット原案.md の依存表 ──
+# 2026-07-05 確定: PL-3b（SCRUM-68・モノを固定設置。SP-11仕様策定が別途block）を追加。
+#   先行=PL-3（拾う/仮設置の基本実装）のみ。MVP-LVをblockするMVP必須スコープ。
 DESIGN = {
     "CS-1": [], "CS-2": ["CS-1"], "CS-3": ["CS-1"],
-    "PL-1": [], "PL-2": [], "PL-3": ["PL-2", "CS-1"], "PL-4": ["PL-3"], "PL-5": ["PL-3"], "PL-6": ["PL-2"],
+    "PL-1": [], "PL-2": [], "PL-3": ["PL-2", "CS-1"], "PL-3b": ["PL-3"], "PL-4": ["PL-3"], "PL-5": ["PL-3"], "PL-6": ["PL-2"],
     "EW-1": [], "EW-5": ["CS-3", "EW-1"], "EW-2": ["CS-3"], "EW-3": ["EW-1", "EW-2"], "EW-4": ["CS-1"],
     "FL-1": ["PL-2", "CS-1"], "FL-2": ["FL-1"],
     "SD-1": ["CS-3"], "SD-2": ["SD-1"], "SD-3": ["SD-1"], "SD-4": ["SD-1", "SD-3"],
@@ -61,10 +64,12 @@ DESIGN = {
     "LV-1": ["PL-1"], "LV-2": ["PL-3"], "LV-3": ["EW-5"], "LV-4": ["EW-5", "EW-4", "CS-3"],
     "LV-5": ["SD-4"], "LV-6": ["FL-2"], "LV-7": ["GL-3"], "LV-8": ["MB-4"],
     "LV-9": ["MB-2", "EW-2"], "LV-10": ["SD-1", "EW-2"],
-    "GE-1": ["LV-10"], "MVP-LV": ["PL-3", "EW-5", "EW-4"], "MVP-GE": ["MVP-LV"],
+    "GE-1": ["LV-10"], "MVP-LV": ["PL-3", "EW-5", "EW-4", "PL-3b"], "MVP-GE": ["MVP-LV"],
 }
 
 # ── レーン割り（070.010.ロードマップ 2026-07-03。ヒルタ=Hiruta）──
+# 2026-07-05 確定: PL-1（SCRUM-13・走り速度調整）は Mori に確定（従来の LANE_CONFLICTS 解消）。
+#   PL-3b はPL系列既定どおり Hiruta。
 LANE = {}
 for mid in DESIGN:
     cat = re.match(r"([A-Z]+)", mid).group(1)
@@ -74,7 +79,8 @@ LANE.update({"EW-4": "Hiruta", "GL-3": "Hiruta",
              "MB-3a": "Mori", "MB-3b": "Mori", "MB-3c": "Mori",
              "LV-1": "Hiruta", "LV-2": "Hiruta", "LV-3": "Hiruta", "LV-4": "Hiruta", "LV-5": "Hiruta",
              "LV-6": "Mori", "LV-7": "Mori", "LV-8": "Mori", "LV-9": "Mori", "LV-10": "Mori",
-             "MVP-LV": "Mori", "MVP-GE": "Mori"})
+             "MVP-LV": "Mori", "MVP-GE": "Mori",
+             "PL-1": "Mori"})
 
 # ── 工数（h）: 実装4h / 配置・アセット2h ──
 PLACEMENT = {"PL-4", "EW-4", "FL-2", "SD-4", "GL-3", "MB-4",
@@ -82,7 +88,8 @@ PLACEMENT = {"PL-4", "EW-4", "FL-2", "SD-4", "GL-3", "MB-4",
 EFFORT_H = {mid: (2.0 if mid in PLACEMENT else 4.0) for mid in DESIGN}
 
 # 010原案の per-ticket担当 と ロードマップ(新)レーン割りが食い違うもの（要確認）
-LANE_CONFLICTS = ["PL-1", "PL-6", "SD-2", "EW-3", "GE-1"]
+# 2026-07-05: PL-1 は Mori に確定したため一覧から除外。
+LANE_CONFLICTS = ["PL-6", "SD-2", "EW-3", "GE-1"]
 
 
 def fail(msg):
@@ -182,6 +189,12 @@ def main():
                          blockers=blockers)
         if mid:
             byid[mid] = key
+
+    # 2026-07-05 確定: SCRUM-68 に元IDラベル未付与のため一時オーバーライド
+    # （実ラベル付与はStep3の適用時にJiraへ書込む。読取専用の本再生成では書込まない）
+    if "SCRUM-68" in info and not info["SCRUM-68"]["mid"]:
+        info["SCRUM-68"]["mid"] = "PL-3b"
+        byid["PL-3b"] = "SCRUM-68"
 
     def k(mid):
         return byid.get(mid, "?")
