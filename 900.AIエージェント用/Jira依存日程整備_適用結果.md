@@ -1,0 +1,129 @@
+# Jira適用結果  総計 106成功 / 0失敗
+
+## 3a-リンク追加 (39/39 成功)
+- [OK] SCRUM-10->SCRUM-11
+- [OK] SCRUM-15->SCRUM-16
+- [OK] SCRUM-15->SCRUM-17
+- [OK] SCRUM-14->SCRUM-18
+- [OK] SCRUM-10->SCRUM-24
+- [OK] SCRUM-14->SCRUM-24
+- [OK] SCRUM-24->SCRUM-25
+- [OK] SCRUM-26->SCRUM-27
+- [OK] SCRUM-26->SCRUM-28
+- [OK] SCRUM-26->SCRUM-29
+- [OK] SCRUM-28->SCRUM-29
+- [OK] SCRUM-30->SCRUM-31
+- [OK] SCRUM-30->SCRUM-32
+- [OK] SCRUM-31->SCRUM-32
+- [OK] SCRUM-19->SCRUM-34
+- [OK] SCRUM-33->SCRUM-34
+- [OK] SCRUM-33->SCRUM-38
+- [OK] SCRUM-34->SCRUM-38
+- [OK] SCRUM-35->SCRUM-38
+- [OK] SCRUM-36->SCRUM-38
+- [OK] SCRUM-37->SCRUM-38
+- [OK] SCRUM-13->SCRUM-39
+- [OK] SCRUM-15->SCRUM-40
+- [OK] SCRUM-20->SCRUM-41
+- [OK] SCRUM-12->SCRUM-42
+- [OK] SCRUM-20->SCRUM-42
+- [OK] SCRUM-23->SCRUM-42
+- [OK] SCRUM-29->SCRUM-43
+- [OK] SCRUM-25->SCRUM-44
+- [OK] SCRUM-32->SCRUM-45
+- [OK] SCRUM-38->SCRUM-46
+- [OK] SCRUM-21->SCRUM-47
+- [OK] SCRUM-34->SCRUM-47
+- [OK] SCRUM-21->SCRUM-48
+- [OK] SCRUM-26->SCRUM-48
+- [OK] SCRUM-23->SCRUM-50
+- [OK] SCRUM-68->SCRUM-50
+- [OK] SCRUM-50->SCRUM-51
+- [OK] SCRUM-15->SCRUM-68
+
+## 3b-リンク削除 (4/4 成功)
+- [OK] linkId 10007
+- [OK] linkId 10008
+- [OK] linkId 10010
+- [OK] linkId 10006
+
+## 3c-SCRUM53親変更 (1/1 成功)
+- [OK] parent->SCRUM-5
+
+## 3c-SCRUM53担当 (1/1 成功)
+- [OK] assignee->Mori
+
+## 3c-SCRUM53ステータス (1/1 成功)
+- [OK] status->Done
+
+## 3d-担当者(Mori) (8/8 成功)
+- [OK] SCRUM-11
+- [OK] SCRUM-60
+- [OK] SCRUM-64
+- [OK] SCRUM-13
+- [OK] SCRUM-61
+- [OK] SCRUM-62
+- [OK] SCRUM-63
+- [OK] SCRUM-68
+
+## 3d-担当者(Hiruta) (3/3 成功)
+- [OK] SCRUM-16
+- [OK] SCRUM-17
+- [OK] SCRUM-18
+
+## 3d-SCRUM68ラベル (1/1 成功)
+- [OK] 元ID:PL-3b付与
+
+## 3e-親解除 (3/3 成功)
+- [OK] SCRUM-61
+- [OK] SCRUM-62
+- [OK] SCRUM-63
+
+## 3f-日付 (40/40 成功)
+- [OK] SCRUM-12
+- [OK] SCRUM-15
+- [OK] SCRUM-20
+- [OK] SCRUM-23
+- [OK] SCRUM-68
+- [OK] SCRUM-16
+- [OK] SCRUM-50
+- [OK] SCRUM-51
+- [OK] SCRUM-17
+- [OK] SCRUM-11
+- [OK] SCRUM-13
+- [OK] SCRUM-21
+- [OK] SCRUM-18
+- [OK] SCRUM-22
+- [OK] SCRUM-30
+- [OK] SCRUM-24
+- [OK] SCRUM-31
+- [OK] SCRUM-35
+- [OK] SCRUM-36
+- [OK] SCRUM-26
+- [OK] SCRUM-37
+- [OK] SCRUM-27
+- [OK] SCRUM-28
+- [OK] SCRUM-33
+- [OK] SCRUM-34
+- [OK] SCRUM-25
+- [OK] SCRUM-29
+- [OK] SCRUM-44
+- [OK] SCRUM-32
+- [OK] SCRUM-38
+- [OK] SCRUM-45
+- [OK] SCRUM-39
+- [OK] SCRUM-46
+- [OK] SCRUM-47
+- [OK] SCRUM-48
+- [OK] SCRUM-40
+- [OK] SCRUM-49
+- [OK] SCRUM-41
+- [OK] SCRUM-42
+- [OK] SCRUM-43
+
+## 3g-エピック期限 (5/5 成功)
+- [OK] SCRUM-5
+- [OK] SCRUM-6
+- [OK] SCRUM-7
+- [OK] SCRUM-8
+- [OK] SCRUM-9
