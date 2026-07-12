@@ -1,0 +1,118 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Verify ADynamicErasableWall Implementation",
+        "description": "Validate the dynamic mesh Boolean subtraction approach as architectural decision point",
+        "details": "This is the highest priority task as it determines the entire erasure architecture going forward.\n\nValidation checklist:\n1. VS build succeeds with GeometryScriptingCore module resolution\n2. Place ADynamicErasableWall in level with WallMaterial assigned\n3. Illuminate with existing searchlight - verify actual hole creation with shaded oblique inner walls\n4. Player can pass through hole but not solid portions (complex-as-simple collision)\n5. Hole follows moving light/AutoMover wall, restores when light leaves\n6. `stat unit` performance is practical (adjust RebuildInterval if heavy)\n\nImplementation status: Code complete (2026-06-18), awaiting verification\nFiles: Public/Gimmick/DynamicErasableWall.h, Private/Gimmick/DynamicErasableWall.cpp\nBuild config: GeometryScripting plugin + geometry modules in Colours.uproject/.Build.cs\n\nDecision point: If performance is acceptable → freeze Step5-7 segment approach and unify on Boolean method. If too heavy → revert to segment+section plug approach (AErasableWall) and move this to idea pool.",
+        "testStrategy": "PIE test: static wall illumination → hole visible with shaded inner surface. AutoMover wall → hole tracks position. Light removal → immediate restoration. `stat unit` → frame time acceptable (<33ms target). All 5 validation items must pass.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Fix Step6.1 Boundary Penetration Bug",
+        "description": "Resolve collision response issue where character penetrates non-erased side at erasure boundary",
+        "details": "Current issue: When character approaches moving box erasure boundary, they clip into the non-erased side.\n\nRoot cause investigation (from Step6 log): Related to segment cell collision disable timing and physics depenetration consistency.\n\nNote from log (line 35): Issue may be unrelated to erasure - appears to be general AutoMoverComponent behavior where StaticMesh with AutoMover allows player penetration when player is in movement path.\n\nImplementation approach:\n- If AutoMover root cause: Investigate collision channel settings, sweep vs teleport movement, or push-out behavior\n- If erasure-specific: Review segment cell disable timing relative to physics solver step\n- Consider boundary cell transition smoothing or movement restriction\n\nAcceptance criteria: Character cannot penetrate non-erased side when approaching erasure boundary during box movement (PIE verification).\n\nRelated log: 実装ログ/Step6.1_境界めり込み修正.md",
+        "testStrategy": "Place moving AErasableWall with AutoMover. PIE: position character at future boundary position, wait for box to reach them. Character should be pushed cleanly to erased/non-erased side without clipping into solid geometry. Test at multiple approach angles.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Resolve Step7 Cross-Section Material Black Area Issue",
+        "description": "Fix black flickering area on M_ConeSection inner wall during box movement",
+        "details": "Current status: M_ConeSection material implemented, cone tracks light direction, but small black area appears/disappears during AutoMover wall movement.\n\nSymptom (from log line 111-112): Small region renders fully black, appears/disappears with box movement while maintaining similar area, vibrates.\n\nDiagnostic procedure (scheduled 6/20, lines 113-120):\n1. **Static wall test**: Disable AutoMover - if black area disappears → timing issue between clip params and cone transform updates. If persists → static calculation error or Z-fighting.\n2. **Single-axis clip isolation**: Modify Custom node return to test one axis at a time (e.g., `return (m.x > 0) ? 1.0 : 0.0;`) - identify which axis introduces the black region.\n3. **Emissive value visualization**: Connect clip margin value (`m.x/y/z`) to EmissiveColor instead of OpacityMask - check if black area has negative values.\n4. **Z-fighting check**: Offset cone WorldLoc along LightDir by +5 units in UpdateConeSection. If black area shrinks/disappears → Z-fighting confirmed, fix with depth bias in material Detail.\n\nImplementation notes:\n- Box clip uses 5 VectorParameters: WallCenterWS, WallHalfExtent, WallAxisX/Y/Z (must match C++ exactly)\n- Cone mesh uses SetAbsolute(true,true,true) to prevent AutoMover shake\n- RefreshConeSection() called every Tick to update clip params for moving walls\n- Normal input disconnected (UE's Two Sided auto-flip handles it)\n\nRelated log: 実装ログ/Step7_断面描画.md lines 113-120",
+        "testStrategy": "Follow 4-step diagnostic procedure in order. Static wall test isolates timing vs calculation. Single-axis test identifies problematic dimension. Emissive visualization confirms clip math correctness. Z-fighting test confirms/rules out depth conflict. Once root cause identified, apply targeted fix and verify black area eliminated in PIE with moving wall.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement Step9 CMY Color Matching System",
+        "description": "Implement light color × wall color matching judgment using CMY Euclidean distance",
+        "details": "Specification (仕様/01_混色システム.md):\n- Data structure: Independent C/M/Y int values (changed from R/G/B), display-only RGB conversion (R=1-C, G=1-M, B=1-Y)\n- Matching formula: d = √(ΔC² + ΔM² + ΔY²)\n- Threshold parameter (externalized for balance tuning)\n- If d > threshold → erasure applied\n- If d ≤ threshold → pass-through only (no erasure)\n\nImplementation scope:\n1. Add CMY FIntVector properties to AColoursConeLight and AErasableWall\n2. Convert existing RGB values to CMY representation\n3. Implement EuclideanDistanceCMY() utility function\n4. Add threshold parameter to AColoursConeLight (UPROPERTY EditAnywhere)\n5. Modify erasure application logic to check distance before applying\n6. Add RGB↔CMY conversion helpers for editor display\n\nRelated specs:\n- 仕様/01_混色システム.md: CMY unified management for light/wall/character\n- Direct rule: \"Same color passes through\" (intuitive)\n\nNote: This is the minimum required Step to complete Phase1 core mechanic.",
+        "testStrategy": "Create test level with walls of known CMY values. Use lights with: (1) matching CMY → verify pass-through without erasure, (2) CMY within threshold → verify pass-through, (3) CMY beyond threshold → verify erasure applied. Adjust threshold parameter and confirm behavior changes accordingly. Validate RGB display conversion matches CMY internal values.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Step8 Performance Optimization and Polish",
+        "description": "Tune Phase1 overall performance and quality finishing",
+        "details": "Scope:\n- Profile current implementation with `stat unit`, `stat game`, `stat scenerendering`\n- Identify performance bottlenecks (likely candidates: collision updates, dynamic material updates, segment rebuild frequency)\n- Optimize based on chosen architecture (segment vs dynamic mesh)\n  - If segment approach: Tune segment cell granularity, throttle visual update rate\n  - If dynamic mesh: Tune RebuildInterval, MoveThreshold, AngleThresholdDeg; consider async collision cooking\n- Material optimization: Check instruction count in M_ConeSection, consider LOD strategies\n- Implement quality settings if needed (e.g., segment density scalar)\n- Polish visual transitions (erasure fade, restoration timing)\n- Verify consistent 60fps target on reference hardware\n\nConfiguration parameters to expose:\n- Erasure update rate throttle\n- Collision update cadence (may differ from visual)\n- Segment granularity or rebuild thresholds (architecture-dependent)\n\nAcceptance: Phase1 mechanics run at stable 60fps in representative test level with multiple lights and walls.\n\nRelated log: 実装ログ/Step8_負荷調整.md",
+        "testStrategy": "Create stress test level: 3+ moving searchlights, 5+ erasable walls (some moving with AutoMover), player navigating through. Run PIE with `stat unit` overlay. Record frame times during peak load. Identify worst-case scenarios (e.g., multiple lights on one wall). Apply optimizations iteratively, re-profile after each. Target: Game thread <16ms, Render thread <16ms, GPU <16ms for 60fps.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement Step10 Moving Spotlight Gimmick",
+        "description": "Create moving spotlight that erases walls/platforms in real-time with instant restoration",
+        "details": "Specification (Phase1 gimmick ②, 仕様/03_ギミック設計.md):\n\nAcceptance criteria (defined 2026-06-19):\n1. Moving spotlight illuminates walls/platforms, erased portions update in real-time\n2. Light removal → immediate restoration (zero delay)\n3. Player can time pass-through/escape based on light movement\n\nMinimum test level: Single reciprocating light + 1 wall (or platform mesh) room, PIE verification of light tracking and instant restoration.\n\nFailure behavior: When light is not hitting, wall/platform must be solid so player doesn't fall.\n\nImplementation approach:\n1. Create AMovingSpotlight actor deriving from AColoursConeLight\n2. Add movement component or timeline-based position animation\n3. Support configurable paths (linear reciprocate, circular, waypoint-based)\n4. Leverage existing erasure/restoration infrastructure (already supports light movement)\n5. Instant restoration requirement already met by current implementation (Step3-6)\n6. Add editor-friendly path visualization\n\nTechnical notes:\n- Existing AColoursConeLight already updates erasure every frame when active\n- Restoration on deactivation already implemented in release loop and EndPlay\n- Focus implementation on movement patterns and editor usability",
+        "testStrategy": "Create test room with moving platform over pit. Spotlight reciprocates across platform. PIE: Stand on platform in light path → fall through when lit, land on solid platform when light moves away. Verify restoration is instant (no fall delay). Test edge case: jump through hole just as light leaves → hole should close immediately, preventing passage.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Step11 Photosensitive Puzzle (Door Mechanism)",
+        "description": "Create photosensitive receiver that opens door when illuminated with matching CMY color",
+        "details": "Specification (Phase1 gimmick ③, 仕様/03_ギミック設計.md):\n\nAcceptance criteria (defined 2026-06-19):\n1. Photosensitive receiver triggers door open when illuminated with specific CMY color match\n2. Door opens only while correct light is applied, closes immediately when light removed\n3. Incorrect color (CMY Euclidean distance > threshold) does not trigger\n\nMinimum test level: 1 receiver + 1 door room, PIE verification of 3 cases: correct color → open, light removed → close, wrong color → no action.\n\nFailure behavior: Door remains closed when light color doesn't match.\n\nImplementation approach:\n1. Create APhotosensitiveReceiver actor\n   - Properties: Target CMY color (FIntVector), threshold (float), activated state (bool)\n   - Overlap/trace detection for incoming light (similar to AErasableWall)\n   - CMY distance calculation (reuse from Step9)\n2. Create ADoorMechanism actor (or use UE's built-in door blueprint)\n   - Properties: Open/closed states, animation timeline\n   - Public API: OpenDoor(), CloseDoor()\n3. Wire receiver → door via delegate/interface\n4. Receiver checks light CMY every frame while illuminated\n   - Distance ≤ threshold → broadcast \"activate\" → door opens\n   - Light removed or distance > threshold → broadcast \"deactivate\" → door closes\n5. Support multiple receivers for AND/OR logic (stretch)\n\nTechnical notes:\n- Reuse CMY matching logic from Step9 (EuclideanDistanceCMY utility)\n- Door should respond immediately (no delay) for tight puzzle timing\n- Consider visual feedback on receiver (glow/color change when activated)",
+        "testStrategy": "Test level setup: Receiver (target CMY = cyan 50,50,0), door blocking path, player with adjustable light. Test case 1: Illuminate with cyan (50,50,0) → door opens. Test case 2: Remove light → door closes immediately. Test case 3: Illuminate with magenta (0,50,50) → door stays closed. Test case 4: Illuminate with near-cyan within threshold → door opens. Verify threshold parameter correctly adjusts sensitivity.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Phase1 Integration and Vertical Slice Validation",
+        "description": "Integrate all Phase1 mechanics into cohesive playable room and validate against MVP spec",
+        "details": "Final integration task to validate Phase1 completion.\n\nScope:\n1. Create integrated test level demonstrating all Phase1 gimmicks:\n   - Pickup light + wall erasure with CMY matching (Step9)\n   - Moving spotlight timing challenge (Step10)\n   - Photosensitive door puzzle (Step11)\n2. Validate against 縦スライス_MVP.md (vertical slice spec)\n3. Implement tutorial messaging/visual cues to teach mechanics\n4. Polish pass:\n   - Audio feedback (light activation, erasure, door open/close)\n   - Visual polish (particle effects, material refinement)\n   - Consistent art direction\n5. Playtest for:\n   - Mechanic clarity (can player understand without external explanation?)\n   - Difficulty curve (gradual introduction of concepts)\n   - Fun factor (satisfying to solve?)\n6. Document any bugs or usability issues for post-Phase1 backlog\n\nDeliverables:\n- Playable Phase1 demo level (5-10 minutes)\n- Playtesting notes document\n- Phase1 completion report\n\nAcceptance: External playtester can complete level understanding all mechanics without developer explanation. All Step1-11 features working together without critical bugs. Performance stable at 60fps.\n\nRelated spec: _縦スライス_MVP.md (defines north star - minimum playable room)",
+        "testStrategy": "External playtest protocol: (1) Provide playtester with build, no instructions. (2) Observe playthrough, note confusion points. (3) Post-play interview: \"Did you understand how light-wall interaction worked? Which puzzle was hardest? What felt unclear?\" (4) Review gameplay recording for friction points. (5) Iterate on tutorial/feedback based on findings. Success criteria: 3/3 playtesters complete level and correctly explain mechanics without hints.",
+        "priority": "high",
+        "dependencies": [
+          5,
+          6,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2026-06-19T13:15:17.889Z",
+      "updated": "2026-06-19T13:15:17.889Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
