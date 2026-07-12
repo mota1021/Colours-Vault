@@ -90,7 +90,7 @@ Colours（`E:\UEProjects\Colours`）は現在 **UE5.3 / C++** で開発中。以
 
 ### Phase 7 — コミット・マージ・共有
 - [x] **移行ブランチで dv コミット**：`cd E:\UEProjects\Colours; dv commit -a -m "UE5.3→5.8 移行"`。※ **Binaries/ + 再保存アセットで巨大コミット**になる想定。 ✅ 2026-07-08
-- [ ] **Vault 側は git コミット**（文書更新分）。二重コミット規約は `/colours-end` に従う。
+- [ ] **Vault 側は git コミット**（文書更新分）。二重コミット規約は `/colours-task-end`・`/colours-day-end` に従う。
 - [x] 検証完了後、**移行ブランチを main へマージ**。 ✅ 2026-07-08
 - [x] **ヒルタへ共有**：マージ後に dv sync ＋ローカル再ビルドが必要（Binaries 追跡のため）。5.8 への切替タイミングを明示的に連絡。 ✅ 2026-07-08
 

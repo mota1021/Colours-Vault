@@ -41,7 +41,7 @@ created: 2026-07-11
 - **コード**: `E:\UEProjects\Colours`（UEプロジェクト。Vault とは別リポジトリ）
 - **エンジン**: **UE5.8**（2026-07-08 に 5.3 から移行済み。`Colours.uproject` の EngineAssociation を確認）
 - **ビルド**: VS2022 / Development Editor / Win64。コマンドラインなら `<UE5.8インストール先>\Engine\Build\BatchFiles\Build.bat ColoursEditor Win64 Development -Project="E:\UEProjects\Colours\Colours.uproject" -WaitMutex`
-- **VCS**: E: 側は **Diversion (dv)**（デスクトップクライアント起動が前提。`cd E:\UEProjects\Colours` してから dv コマンド）。Vault 側は git。セッション末は `/colours-end` で**両方コミット**
+- **VCS**: E: 側は **Diversion (dv)**（デスクトップクライアント起動が前提。`cd E:\UEProjects\Colours` してから dv コマンド）。Vault 側は git。セッション末は `/colours-task-end`（または日締めなら `/colours-day-end`）で**両方コミット**
 - **主要ソース**: `E:\UEProjects\Colours\Source\Colours\{Public,Private}\ColourType\`・`\Gimmick\`
 
 ## 現状コードの要点（調査済み 2026-07-11）
@@ -174,7 +174,7 @@ public:
 **作業内容**:
 1. Jira: JQL `project = SCRUM AND labels = "元ID:EW-5"` でチケットを特定し「完了」へ遷移（**REST API スクリプト**で実施。認証は `D:\document\ObsidianVault\.env`、依存は requests のみ、遷移「完了」= transition id **51**。単発なので scratchpad スクリプトで可。参考実装: `shared/900.AIエージェント用/scripts/jira_sp_snapshot.py` の .env パースと API 呼び出し）
 2. 実装ログ作成: `shared/070.開発/070.040.実装ログ/260712.EW-5色ゲート統合.md`（既存ログの体裁に合わせ、変更ファイル・設計判断・PIE確認結果を記録）
-3. セッション終了時は `/colours-end`（今日やる事アーカイブ・現在地再生成・**git と dv の二重コミット**）
+3. セッション終了時は `/colours-task-end`（今日やる事の状態更新・**git と dv の二重コミット**）。日単位の締め（今日やる事アーカイブ・現在地再生成）は別途 `/colours-day-end` で行う
 
 **完了条件**: Jira の EW-5 が「完了」・実装ログが存在・両リポジトリにコミット済み
 
@@ -197,4 +197,4 @@ Task 1 → 2 → 3 → 4 →（ユーザー: アセット作成は Task 2 後・
 1. 各 Task 後: Development Editor / Win64 ビルドがエラー0
 2. Task 1 後: 既存テストマップのロード・従来挙動維持（リグレッションなし）
 3. Task 5: ColourGateTest で DoD チェックリスト全項目（ユーザーの PIE 操作で確認）
-4. Task 6: Jira 遷移の API レスポンス確認・`/colours-end` の完了
+4. Task 6: Jira 遷移の API レスポンス確認・`/colours-task-end` の完了
