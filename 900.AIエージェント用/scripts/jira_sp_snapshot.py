@@ -1,11 +1,12 @@
 """
-Jira SPチケットスナップショット生成スクリプト
+Jira チケットスナップショット生成スクリプト
 
-Colours プロジェクト（Jira: SCRUM）の現行マイルストーンに属するSPチケット
-（仕様策定チケット）を Jira REST API (v3) から取得し、
-`../チケットスナップショット.md` を冪等に更新する。
+Colours プロジェクト（Jira: SCRUM）の現行マイルストーンに属する
+SPチケット（仕様策定）＋実装チケット（CS/PL/EW/FL/SD/GL/MB/LV/GE等）を
+Jira REST API (v3) から取得し、`../チケットスナップショット.md` を冪等に更新する。
 
 正本: 創作/ゲーム/Colours/shared/900.AIエージェント用/Jira_SPチケットスナップショット_実行計画.md
+拡張決定記録: 創作/ゲーム/Colours/shared/900.AIエージェント用/タスク管理方針_Jira単一マスター_指示書.md Phase2
 
 実行方法:
     python jira_sp_snapshot.py
@@ -29,9 +30,12 @@ ENV_PATH = Path(r"D:\document\ObsidianVault\.env")
 OUTPUT_PATH = SCRIPT_DIR.parent / "チケットスナップショット.md"
 
 REQUIRED_ENV_KEYS = ("JIRA_BASE_URL", "JIRA_EMAIL", "JIRA_API_TOKEN", "CURRENT_MILESTONE_EPIC")
-COLUMNS = ("ID", "仕様名", "状態", "対応実装チケット", "先行チケット", "着手開始日", "Jiraキー")
+COLUMNS = ("ID", "仕様名", "状態", "カテゴリ", "担当", "対応実装チケット", "先行チケット", "着手開始日", "Jiraキー")
+ISSUE_FIELDS = "summary,status,labels,issuelinks,assignee"
 
-SP_LABEL_RE = re.compile(r'^元ID:(SP-\d+)$')
+SP_CATEGORY_LABEL = "分類:仕様策定"
+ID_LABEL_RE = re.compile(r'^元ID:(.+)$')
+CATEGORY_LABEL_RE = re.compile(r'^分類:(.+)$')
 SUMMARY_PREFIX_RE = re.compile(r'^\[SP-\d+\]\s*')
 TRAILING_NUMBER_RE = re.compile(r'(\d+)$')
 
@@ -83,12 +87,11 @@ def load_env(path: Path) -> dict:
 # ──────────────────────────────────────────────
 # Jira API 呼び出し
 # ──────────────────────────────────────────────
-def fetch_all_issues(base_url: str, email: str, api_token: str, milestone_epic: str) -> list:
-    """現行マイルストーンのSPチケット全件を取得する（nextPageToken方式でページネーション）。
+def fetch_issues_by_jql(base_url: str, email: str, api_token: str, jql: str) -> list:
+    """指定JQLに合致するIssue全件を取得する（nextPageToken方式でページネーション）。
 
     旧エンドポイント /rest/api/3/search は410 Goneで廃止済みのため使用しない。
     """
-    jql = f'project = SCRUM AND parent = {milestone_epic} AND labels = "分類:仕様策定"'
     url = f"{base_url.rstrip('/')}/rest/api/3/search/jql"
     auth = (email, api_token)
     headers = {"Accept": "application/json"}
@@ -99,7 +102,7 @@ def fetch_all_issues(base_url: str, email: str, api_token: str, milestone_epic: 
     while True:
         params = {
             "jql": jql,
-            "fields": "summary,status,labels,issuelinks",
+            "fields": ISSUE_FIELDS,
             "maxResults": 100,
         }
         if next_page_token:
@@ -134,32 +137,50 @@ def fetch_all_issues(base_url: str, email: str, api_token: str, milestone_epic: 
     return issues
 
 
+def fetch_sp_issues(base_url: str, email: str, api_token: str, milestone_epic: str) -> list:
+    """現行マイルストーンのSPチケット（仕様策定）全件を取得する。"""
+    jql = f'project = SCRUM AND parent = {milestone_epic} AND labels = "{SP_CATEGORY_LABEL}"'
+    return fetch_issues_by_jql(base_url, email, api_token, jql)
+
+
+def fetch_impl_issues(base_url: str, email: str, api_token: str, milestone_epic: str) -> list:
+    """現行マイルストーンの実装チケット（SPチケット以外）全件を取得する。"""
+    jql = f'project = SCRUM AND parent = {milestone_epic} AND labels != "{SP_CATEGORY_LABEL}"'
+    return fetch_issues_by_jql(base_url, email, api_token, jql)
+
+
 # ──────────────────────────────────────────────
 # issue → レコード変換
 # ──────────────────────────────────────────────
 def extract_record(issue: dict):
-    """1件のissueから ID/仕様名/状態/対応実装チケット/先行チケット/Jiraキー を抽出する。
+    """1件のissueから ID/仕様名/状態/カテゴリ/担当/対応実装チケット/先行チケット/Jiraキー を抽出する。
 
-    `元ID:SP-N` ラベルが無い場合は None を返す（呼び出し側で警告してスキップする）。
+    `元ID:*` ラベルが無い場合は None を返す（呼び出し側で警告してスキップする）。
+    SPチケット（`元ID:SP-N`）・実装チケット（`元ID:PL-3` 等の任意ID）の両方に対応する共通関数。
     """
     key = issue.get("key", "?")
     fields = issue.get("fields") or {}
     labels = fields.get("labels") or []
 
-    sp_id = None
+    record_id = None
+    category = "-"
     for label in labels:
-        m = SP_LABEL_RE.match(label)
+        m = ID_LABEL_RE.match(label)
         if m:
-            sp_id = m.group(1)
-            break
+            record_id = m.group(1)
+            continue
+        m = CATEGORY_LABEL_RE.match(label)
+        if m:
+            category = m.group(1)
 
-    if sp_id is None:
-        print(f"[WARN] {key}: labelsに『元ID:SP-N』形式が見つからないためスキップします。", file=sys.stderr)
+    if record_id is None:
+        print(f"[WARN] {key}: labelsに『元ID:*』形式が見つからないためスキップします。", file=sys.stderr)
         return None
 
     summary = fields.get("summary") or ""
     spec_name = SUMMARY_PREFIX_RE.sub("", summary).strip()
     status = (fields.get("status") or {}).get("name", "")
+    assignee = (fields.get("assignee") or {}).get("displayName") or "-"
 
     outward, inward = [], []
     for link in fields.get("issuelinks") or []:
@@ -174,9 +195,11 @@ def extract_record(issue: dict):
     inward.sort(key=trailing_number)
 
     return {
-        "ID": sp_id,
+        "ID": record_id,
         "仕様名": spec_name,
         "状態": status,
+        "カテゴリ": category,
+        "担当": assignee,
         "対応実装チケット": ", ".join(outward) if outward else "-",
         "先行チケット": ", ".join(inward) if inward else "-",
         "Jiraキー": key,
@@ -241,8 +264,8 @@ def build_markdown(records: list, existing_start_dates: dict) -> str:
     for rec in records:
         start_date = existing_start_dates.get(rec["ID"], "")
         row = [
-            rec["ID"], rec["仕様名"], rec["状態"], rec["対応実装チケット"],
-            rec["先行チケット"], start_date, rec["Jiraキー"],
+            rec["ID"], rec["仕様名"], rec["状態"], rec["カテゴリ"], rec["担当"],
+            rec["対応実装チケット"], rec["先行チケット"], start_date, rec["Jiraキー"],
         ]
         lines.append("| " + " | ".join(row) + " |")
 
@@ -265,22 +288,30 @@ def main():
         pass
 
     env = load_env(ENV_PATH)
-    issues = fetch_all_issues(
+    base_url, email, token, milestone = (
         env["JIRA_BASE_URL"], env["JIRA_EMAIL"], env["JIRA_API_TOKEN"], env["CURRENT_MILESTONE_EPIC"]
     )
 
-    if len(issues) == 0:
+    sp_issues = fetch_sp_issues(base_url, email, token, milestone)
+    if len(sp_issues) == 0:
         fail(
-            f"現行マイルストーン（{env['CURRENT_MILESTONE_EPIC']}）に該当するSPチケットが0件でした。"
+            f"現行マイルストーン（{milestone}）に該当するSPチケットが0件でした。"
             " .env の CURRENT_MILESTONE_EPIC・JQL条件・認証情報を確認してください。"
         )
 
-    records = [r for r in (extract_record(issue) for issue in issues) if r is not None]
+    impl_issues = fetch_impl_issues(base_url, email, token, milestone)
+    if len(impl_issues) == 0:
+        fail(
+            f"現行マイルストーン（{milestone}）に該当する実装チケットが0件でした。"
+            " .env の CURRENT_MILESTONE_EPIC・JQL条件・認証情報を確認してください。"
+        )
+
+    records = [r for r in (extract_record(issue) for issue in sp_issues + impl_issues) if r is not None]
 
     if len(records) == 0:
-        fail("取得した全チケットで『元ID:SP-N』ラベルが見つかりませんでした。Jira側のラベル形式を確認してください。")
+        fail("取得した全チケットで『元ID:*』ラベルが見つかりませんでした。Jira側のラベル形式を確認してください。")
 
-    records.sort(key=lambda r: trailing_number(r["ID"]))
+    records.sort(key=lambda r: trailing_number(r["Jiraキー"]))
 
     existing_start_dates = parse_existing_start_dates(OUTPUT_PATH)
 
