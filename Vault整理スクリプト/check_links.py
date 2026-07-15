@@ -16,6 +16,11 @@ archive/ 配下（過去スナップショット、直すべきでない凍結�
 除外する。実装ログ（*実装ログ*/ 配下）はUEプロジェクト側（別リポジトリ）のパスを含むためパス参照
 チェックの対象外とする（wikilinkチェックは対象のまま）。
 
+意図的で恒久的な参照（例: Obsidian導入前オンボーディングのパス表記）は、その行に
+明示マーカー `check-links-ignore` を書けばその行の検査をスキップする。毎回「問題なし」と
+再判定するコストを避けるための仕組み。Obsidian上で不可視なHTMLコメントで理由を併記する運用:
+    ... `030.環境整備/ドキュメント閲覧ガイド.md`<!-- check-links-ignore: 理由 --> ...
+
 結果は標準出力に一覧表示するのみ。非ブロッキングのツールのため、呼び出し側は終了コードで
 処理を止める必要はない（0=検出なし / 1=検出あり、の情報用途のみ）。
 
@@ -40,6 +45,9 @@ EXCLUDED_SCAN_DIR_NAMES = ("archive",)
 # 参照元としては走査しない(archive/ と同思想)。リンク先indexには含める。
 EXCLUDED_SCAN_FILE_NAMES = ("決定ログ.md",)
 IMPL_LOG_MARKER = "実装ログ"
+# この文字列を含む行は検査をスキップする。意図的で恒久的な参照を毎回再判定しないための明示マーカー。
+# HTMLコメント <!-- check-links-ignore: 理由 --> として書けばObsidian上は不可視のまま注記できる。
+IGNORE_LINE_MARKER = "check-links-ignore"
 
 
 def has_placeholder(text):
@@ -110,7 +118,7 @@ def check_file(md_path, basename_index, cwd, vault_root):
     skip_path_ref = is_impl_log(md_path)
 
     for lineno, line in enumerate(lines, start=1):
-        if has_placeholder(line):
+        if has_placeholder(line) or IGNORE_LINE_MARKER in line:
             continue
 
         for m in WIKILINK_RE.finditer(line):
