@@ -11,7 +11,7 @@ created: 2026-07-11
 ## 背景・問題
 
 - EW-1 で「光が当たっている間だけ消える壁」（`AErasableWall`）は実装済みだが**色非依存**（どんな色の光でも消える）。
-- 仕様（`shared/050.仕様/050.030.ギミック/030.020.消える壁/020.020.仕様.md`）は「**光の色と壁の色が同じ場合に消える**／異なる色の光は壁を消さない」。
+- 仕様（`shared/050.仕様/050.030.ギミック/030.020.消える壁/消える壁.020.仕様.md`）は「**光の色と壁の色が同じ場合に消える**／異なる色の光は壁を消さない」。
 - 照合ロジック自体は CS-3 で実装済み: `FColoursColorBase::IsColorMatch(RgbA, RgbB, Threshold)`（RGB正規化→ユークリッド距離 d ≦ しきい値。`Source/Colours/Public/ColourType/ColoursColorBase.h:15`）。※チケット原案の「DoColoursMatch」という関数名は存在しない。
 - 現状、**色情報が両端に欠けている**: ライト `AColoursConeLight` は見た目用 `FLinearColor LightColor` のみ、壁 `AErasableWall` は色プロパティなし。
 - EW-5 は MVP クリティカルパス上（CS-1→CS-3→**EW-5**→MVP-LV→MVP-GE）。後続の MVP-LV・LV-3・LV-4 がブロックされている。
@@ -175,8 +175,8 @@ public:
 1. Jira: JQL `project = SCRUM AND labels = "元ID:EW-5"` でチケットを特定し「完了」へ遷移（**REST API スクリプト**で実施。認証は `D:\document\ObsidianVault\.env`、依存は requests のみ、遷移「完了」= transition id **51**。単発なので scratchpad スクリプトで可。参考実装: `shared/900.AIエージェント用/scripts/jira_sp_snapshot.py` の .env パースと API 呼び出し）
 2. 実装ログ作成: `shared/070.開発/070.040.実装ログ/260712.EW-5色ゲート統合.md`（既存ログの体裁に合わせ、変更ファイル・設計判断・PIE確認結果を記録）
 3. **仕様書のコード識別子同期**（2026-07-13 決定・決定事項#9の判断結果）: Task1のリネームが完了したら、`shared/050.仕様/050.010.カラーシステム/010.010.光/010.050.伝播/` 配下の以下5箇所を新名に更新する:
-   - `050.010.ラフ.md:17,32`・`050.020.仕様.md:11,53`・`050.040.実装.md:19`: `FColoursLightValue` → `FColoursRGBValue`
-   - `050.010.ラフ.md:46`・`050.040.実装.md:11`: `FColoursColorBase` → `FColoursColourBase`
+   - `伝播.010.ラフ.md:17,32`・`伝播.020.仕様.md:11,53`・`伝播.040.実装.md:19`: `FColoursLightValue` → `FColoursRGBValue`
+   - `伝播.010.ラフ.md:46`・`伝播.040.実装.md:11`: `FColoursColorBase` → `FColoursColourBase`
    （概念用語＝「インク型/光型」等のドメインラベルは既に「CMY型/RGB型」で整合済みのため対象外）
 4. セッション終了時は `/colours-task-end`（今日やる事の状態更新・**git と dv の二重コミット**）。日単位の締め（今日やる事アーカイブ・現在地再生成）は別途 `/colours-day-end` で行う
 
