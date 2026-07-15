@@ -12,8 +12,9 @@ Vaultルート の3箇所を基準に解決する。
 
 誤検知を避けるため、プレースホルダーを含む行（<...> {{...}} YYYY NNN XXX 等）は対象外とし、
 archive/ 配下（過去スナップショット、直すべきでない凍結記録）は走査対象から除外する。
-実装ログ（*実装ログ*/ 配下）はUEプロジェクト側（別リポジトリ）のパスを含むためパス参照チェックの
-対象外とする（wikilinkチェックは対象のまま）。
+決定ログ.md（追記専用の凍結履歴。当時の記録として旧名・旧パスのまま保存する方針）も走査対象から
+除外する。実装ログ（*実装ログ*/ 配下）はUEプロジェクト側（別リポジトリ）のパスを含むためパス参照
+チェックの対象外とする（wikilinkチェックは対象のまま）。
 
 結果は標準出力に一覧表示するのみ。非ブロッキングのツールのため、呼び出し側は終了コードで
 処理を止める必要はない（0=検出なし / 1=検出あり、の情報用途のみ）。
@@ -35,6 +36,9 @@ PLACEHOLDER_MARKERS = ("YYYY", "NNN", "XXX")
 # archive/ とテンプレート系(_で始まるフォルダ・ファイル)は「スキャン対象(参照元)」からは除外する。
 # ただし他ファイルからそこへ向かうリンクは正当なので、basenameインデックス(リンク先)には含める。
 EXCLUDED_SCAN_DIR_NAMES = ("archive",)
+# 追記専用の凍結履歴ファイル。当時の記録として旧名・旧パスのまま保存する方針のため、
+# 参照元としては走査しない(archive/ と同思想)。リンク先indexには含める。
+EXCLUDED_SCAN_FILE_NAMES = ("決定ログ.md",)
 IMPL_LOG_MARKER = "実装ログ"
 
 
@@ -45,6 +49,8 @@ def has_placeholder(text):
 
 
 def is_excluded_from_scan(path):
+    if path.name in EXCLUDED_SCAN_FILE_NAMES:
+        return True
     if any(part in EXCLUDED_SCAN_DIR_NAMES for part in path.parts):
         return True
     return any(part.startswith("_") for part in path.parts)
