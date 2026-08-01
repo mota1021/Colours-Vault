@@ -16,6 +16,7 @@ Jira REST API (v3) から取得し、`../チケットスナップショット.md
 """
 
 import re
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -26,7 +27,8 @@ import requests
 # 定数
 # ──────────────────────────────────────────────
 SCRIPT_DIR = Path(__file__).resolve().parent
-ENV_PATH = Path(r"D:\document\ObsidianVault\.env")
+VAULT_ROOT = next((parent for parent in SCRIPT_DIR.parents if (parent / ".git").exists()), SCRIPT_DIR.parents[6])
+ENV_PATH = VAULT_ROOT / ".env"
 OUTPUT_PATH = SCRIPT_DIR.parent / "チケットスナップショット.md"
 
 REQUIRED_ENV_KEYS = ("JIRA_BASE_URL", "JIRA_EMAIL", "JIRA_API_TOKEN", "CURRENT_MILESTONE_EPIC")
@@ -61,25 +63,25 @@ def trailing_number(value: str) -> int:
 # .env 読み込み（手動パース。python-dotenv 不使用）
 # ──────────────────────────────────────────────
 def load_env(path: Path) -> dict:
-    if not path.exists():
-        fail(f".env が見つかりません: {path}")
-
-    env = {}
-    with path.open("r", encoding="utf-8") as f:
-        for raw_line in f:
-            line = raw_line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, value = line.partition("=")
-            key = key.strip()
-            value = value.strip()
-            if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
-                value = value[1:-1]
-            env[key] = value
+    """Vault直下の.envを既定にし、無い場合は実行環境の環境変数を使う。"""
+    env = {key: os.environ.get(key, "") for key in REQUIRED_ENV_KEYS}
+    if path.exists():
+        with path.open("r", encoding="utf-8") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                key = key.strip()
+                value = value.strip()
+                if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+                    value = value[1:-1]
+                if key in REQUIRED_ENV_KEYS and not env.get(key):
+                    env[key] = value
 
     missing = [k for k in REQUIRED_ENV_KEYS if not env.get(k)]
     if missing:
-        fail(f".env に必要な変数が不足しています（{path}）: {', '.join(missing)}")
+        fail(f"必要な環境変数が不足しています（.env または実行環境）: {', '.join(missing)}")
 
     return env
 
