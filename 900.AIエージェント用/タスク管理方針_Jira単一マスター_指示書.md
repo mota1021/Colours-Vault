@@ -142,7 +142,7 @@ Claude が Jira ステータスを直接更新する必要が実際にあるか�
 
 ### Step 3-2: 必要な場合のみ実装
 
-`jira_task_update.py`（引数: チケットキー・遷移先ステータス・任意コメント）を `scripts/` に追加。同期状態を持たない write-through 設計（1回の呼び出し=1回のREST更新）。スキル（colours-review / colours-end 等）への組み込みは別途ユーザー合意を得る。
+`jira_task_update.py`（引数: チケットキー・遷移先ステータス・任意コメント）を `.vault-data/900.AIエージェント用/scripts/` に追加。同期状態を持たない write-through 設計（1回の呼び出し=1回のREST更新）。スキル（colours-review / colours-end 等）への組み込みは別途ユーザー合意を得る。
 
 ---
 
