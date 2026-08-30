@@ -172,7 +172,7 @@ public:
 ## Task 6: 完了処理
 
 **作業内容**:
-1. Jira: JQL `project = SCRUM AND labels = "元ID:EW-5"` でチケットを特定し「完了」へ遷移（**REST API スクリプト**で実施。認証は `D:\document\ObsidianVault\.env`、依存は requests のみ、遷移「完了」= transition id **51**。単発なので scratchpad スクリプトで可。参考実装: `shared/900.AIエージェント用/scripts/jira_sp_snapshot.py` の .env パースと API 呼び出し）
+1. Jira: JQL `project = SCRUM AND labels = "元ID:EW-5"` でチケットを特定し「完了」へ遷移（**REST API スクリプト**で実施。認証は `D:\document\ObsidianVault\.env`、依存は requests のみ、遷移「完了」= transition id **51**。単発なので scratchpad スクリプトで可。参考実装: `shared/.vault-data/900.AIエージェント用/scripts/jira_sp_snapshot.py` の .env パースと API 呼び出し）
 2. 実装ログ作成: `shared/070.開発/070.040.実装ログ/260712.EW-5色ゲート統合.md`（既存ログの体裁に合わせ、変更ファイル・設計判断・PIE確認結果を記録）
 3. **仕様書のコード識別子同期**（2026-07-13 決定・決定事項#9の判断結果）: Task1のリネームが完了したら、`shared/050.仕様/050.010.カラーシステム/010.010.光/010.050.伝播/` 配下の以下5箇所を新名に更新する:
    - `伝播.010.ラフ.md:17,32`・`伝播.020.仕様.md:11,53`・`伝播.040.実装.md:19`: `FColoursLightValue` → `FColoursRGBValue`

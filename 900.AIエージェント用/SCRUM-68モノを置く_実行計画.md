@@ -43,7 +43,7 @@ created: 2026-07-14
 
 ## Task 0: Jira 依存リンク引き直し（実装着手時の事前処理）
 
-- [ ] **作業内容**: SCRUM-15→SCRUM-68 のブロックリンク解除を**ユーザー確認のうえ** REST API で実施（[未決-2] 決着 2026-07-13 の影響範囲の残件。認証 = `D:\document\ObsidianVault\.env`・参考実装: `shared/900.AIエージェント用/scripts/jira_sp_snapshot.py`）。
+- [ ] **作業内容**: SCRUM-15→SCRUM-68 のブロックリンク解除を**ユーザー確認のうえ** REST API で実施（[未決-2] 決着 2026-07-13 の影響範囲の残件。認証 = `D:\document\ObsidianVault\.env`・参考実装: `shared/.vault-data/900.AIエージェント用/scripts/jira_sp_snapshot.py`）。
 
 **完了条件**: Jira 上で SCRUM-68 が SCRUM-15 にブロックされていない状態。
 

@@ -120,7 +120,7 @@ Jira 上の実装チケットの実態（カテゴリの持ち方・「前提:�
 
 ### Step 2-2: スクリプト実装
 
-`shared/900.AIエージェント用/scripts/jira_sp_snapshot.py` を拡張（§5-4 の回答により姉妹スクリプトの場合あり）。既存設計を踏襲する:
+`shared/.vault-data/900.AIエージェント用/scripts/jira_sp_snapshot.py` を拡張（§5-4 の回答により姉妹スクリプトの場合あり）。既存設計を踏襲する:
 - 認証・env 構成（`JIRA_API_TOKEN`・`CURRENT_MILESTONE_EPIC`）
 - サイレント失敗しないエラー設計（401 案内・0件時の案内）
 - ユーザー管理列（着手開始日相当）は上書きせず保持、他列は冪等上書き

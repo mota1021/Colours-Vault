@@ -3,7 +3,7 @@
 
 # Jira 依存関係・作業日程 整備差分
 
-> 生成: `scripts/jira_dep_schedule_plan.py`（Jira書込なし）。適用は Vault セッションの Atlassian MCP で行う（末尾の手順参照）。
+> 生成: `創作/ゲーム/Colours/shared/.vault-data/900.AIエージェント用/scripts/jira_dep_schedule_plan.py`（Jira書込なし）。適用は Vault セッションの Atlassian MCP で行う（末尾の手順参照）。
 > パラメータ: 起点=2026-07-06 / 締切=2026-12-20 / 稼働 Mori 7.0h·Hiruta 3.0h/週 / 実装4h·配置2h
 
 ## 1. 依存リンク差分

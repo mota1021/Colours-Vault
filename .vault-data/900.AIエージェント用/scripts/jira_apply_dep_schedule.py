@@ -204,7 +204,7 @@ def main():
             lines.append(f"- [{mark}] {item}" + (f" — {detail}" if detail else ""))
 
     lines.insert(0, f"# Jira適用結果  総計 {total_ok}成功 / {total_fail}失敗")
-    out_path = Path(__file__).resolve().parent.parent / "Jira依存日程整備_適用結果.md"
+    out_path = Path(__file__).resolve().parents[3] / "900.AIエージェント用" / "Jira依存日程整備_適用結果.md"
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"[INFO] 総計 {total_ok}成功 / {total_fail}失敗")
     print(f"[INFO] 詳細: {out_path}")

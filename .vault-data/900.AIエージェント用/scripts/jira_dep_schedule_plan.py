@@ -29,7 +29,7 @@ import requests
 # 定数・パラメータ（差分レビューで調整可）
 # ──────────────────────────────────────────────
 ENV_PATH = Path(r"D:\document\ObsidianVault\.env")
-OUTPUT_PATH = Path(__file__).resolve().parent.parent / "Jira依存日程整備_差分.md"
+OUTPUT_PATH = Path(__file__).resolve().parents[3] / "900.AIエージェント用" / "Jira依存日程整備_差分.md"
 START_FIELD = "customfield_10015"  # 「開始日」
 
 SCHED_START = date(2026, 7, 6)     # 再計算の起点
@@ -338,7 +338,7 @@ def main():
     L.append("")
     L.append("# Jira 依存関係・作業日程 整備差分")
     L.append("")
-    L.append("> 生成: `scripts/jira_dep_schedule_plan.py`（Jira書込なし）。適用は Vault セッションの Atlassian MCP で行う（末尾の手順参照）。")
+    L.append("> 生成: `創作/ゲーム/Colours/shared/.vault-data/900.AIエージェント用/scripts/jira_dep_schedule_plan.py`（Jira書込なし）。適用は Vault セッションの Atlassian MCP で行う（末尾の手順参照）。")
     L.append(f"> パラメータ: 起点={SCHED_START} / 締切={DEADLINE} / 稼働 Mori {WEEKLY_HOURS['Mori']}h·Hiruta {WEEKLY_HOURS['Hiruta']}h/週 / 実装4h·配置2h")
     L.append("")
 

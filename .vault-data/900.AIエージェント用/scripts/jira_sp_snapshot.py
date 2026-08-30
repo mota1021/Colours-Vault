@@ -27,9 +27,10 @@ import requests
 # 定数
 # ──────────────────────────────────────────────
 SCRIPT_DIR = Path(__file__).resolve().parent
+SHARED_ROOT = SCRIPT_DIR.parents[2]
 VAULT_ROOT = next((parent for parent in SCRIPT_DIR.parents if (parent / ".git").exists()), SCRIPT_DIR.parents[6])
 ENV_PATH = VAULT_ROOT / ".env"
-OUTPUT_PATH = SCRIPT_DIR.parent / "チケットスナップショット.md"
+OUTPUT_PATH = SHARED_ROOT / "900.AIエージェント用" / "チケットスナップショット.md"
 
 REQUIRED_ENV_KEYS = ("JIRA_BASE_URL", "JIRA_EMAIL", "JIRA_API_TOKEN", "CURRENT_MILESTONE_EPIC")
 COLUMNS = ("ID", "仕様名", "状態", "カテゴリ", "担当", "対応実装チケット", "先行チケット", "着手開始日", "Jiraキー")

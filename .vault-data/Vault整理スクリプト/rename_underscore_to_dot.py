@@ -17,7 +17,7 @@ from pathlib import Path
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ('utf-8', 'utf8'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-SHARED_ROOT = Path(__file__).parent.parent
+SHARED_ROOT = Path(__file__).resolve().parents[2]
 
 # 名前中の NNN_ パターンを NNN. に変換（先頭 _ のテンプレートは除外）
 _NUM_UNDERSCORE = re.compile(r'(\d{3})_')

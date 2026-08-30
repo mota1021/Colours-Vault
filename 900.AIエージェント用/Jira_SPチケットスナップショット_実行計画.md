@@ -61,7 +61,7 @@ APIトークンの再発行が必要になった場合は https://id.atlassian.c
 
 ## 2. スクリプト要件リスト
 
-`創作/ゲーム/Colours/shared/900.AIエージェント用/scripts/jira_sp_snapshot.py`（次回作成予定）に対する要件:
+`創作/ゲーム/Colours/shared/.vault-data/900.AIエージェント用/scripts/jira_sp_snapshot.py`（次回作成予定）に対する要件:
 
 1. **認証**: `.env` から `JIRA_BASE_URL` / `JIRA_EMAIL` / `JIRA_API_TOKEN` を読み込み、Basic認証でJira REST API v3にアクセスする。`.env` の読み込みは python-dotenv に依存せず手動パースする（`KEY=VALUE` 形式を1行ずつ分割。依存ライブラリを `requests` のみに保つ。2026-07-03の検証スクリプトで実証済みの方式）。
 2. **対象データ**: Colours プロジェクト（SCRUM）のうち、現在のマイルストーンに属するSPチケットのみを取得する（絞り込み条件は §1 の疎通確認で確定した内容を使う）。エンドポイントは `/rest/api/3/search/jql`（旧 `/search` は410で使用不可）。`fields=summary,status,labels,issuelinks` を必ず明示指定する（未指定だと `key` すら返らない）。
