@@ -2,8 +2,8 @@
 Colours Jira チケットスナップショット生成スクリプト。
 
 Jira (SCRUM) の現行マイルストーン配下を取得し、Jiraキーを一意識別子、
-summary を人間向け名称として `チケットスナップショット.md` を冪等更新する。
-旧 `元ID:*`（CS-5 / EW-5 / PL-3b 等）は参照しない。
+Jira summary を人間向け名称として `チケットスナップショット.md` を冪等更新する。
+旧 `元ID:*`（CS-5 / EW-5 / PL-3b 等）ラベルは参照しない。
 
 実行:
     python jira_sp_snapshot.py
@@ -28,6 +28,8 @@ COLUMNS = ("Jiraキー", "名称", "状態", "カテゴリ", "担当", "後続�
 ISSUE_FIELDS = "summary,status,labels,issuelinks,assignee"
 CATEGORY_LABEL_RE = re.compile(r"^分類:(.+)$")
 JIRA_NUMBER_RE = re.compile(r"(\d+)$")
+# Jira summary に歴史的に付いている表示prefixだけ除去する。識別には使わない。
+LEGACY_SP_SUMMARY_PREFIX_RE = re.compile(r"^\[SP-\d+\]\s*")
 API_TOKEN_URL = "https://id.atlassian.com/manage-profile/security/api-tokens"
 
 
@@ -99,6 +101,11 @@ def category_from(labels: list) -> str:
     return "-"
 
 
+def display_name(summary: str) -> str:
+    """Jira summary を表示名へ整形する。旧SP prefixは表示上だけ除去する。"""
+    return LEGACY_SP_SUMMARY_PREFIX_RE.sub("", summary or "").strip()
+
+
 def extract_record(issue: dict) -> dict:
     key = issue.get("key", "?")
     fields = issue.get("fields") or {}
@@ -114,7 +121,7 @@ def extract_record(issue: dict) -> dict:
     inward.sort(key=jira_number)
     return {
         "Jiraキー": key,
-        "名称": (fields.get("summary") or "").strip(),
+        "名称": display_name(fields.get("summary") or ""),
         "状態": (fields.get("status") or {}).get("name", ""),
         "カテゴリ": category_from(fields.get("labels") or []),
         "担当": (fields.get("assignee") or {}).get("displayName") or "-",
@@ -155,7 +162,7 @@ def build_markdown(records: list, start_dates: dict) -> str:
     lines = [
         f"最終更新: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         "",
-        "> 識別ルール: Jiraキーが一意識別子。名称はJira summaryをそのまま表示する。旧独自IDは使用しない。",
+        "> 識別ルール: Jiraキーが一意識別子。名称はJira summary由来の表示名。旧独自IDは識別に使用しない。",
         "",
         "| " + " | ".join(COLUMNS) + " |",
         "|" + "|".join(["---"] * len(COLUMNS)) + "|",
