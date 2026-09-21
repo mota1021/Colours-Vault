@@ -56,46 +56,56 @@ Jiraでは「拾うアクション」「置くアクション」を別Taskとし
 
 ## 5. 作業手順
 
-### 5.1 `BPC_PickupPlace` を作成する
+### 5.1 `Content/Colours/Gimmick/BPC_PickupPlace.uasset` — アセット作成・親クラス設定
 
 1. `Content/Colours/Gimmick/` に Blueprint Component を作成する。
 2. 名前を `BPC_PickupPlace` とする。
 3. 親クラスに `UColoursInteractableComponent` を指定する。
-4. Compileして、`PerformInteraction` をOverrideできることを確認する。
+4. Compileし、`PerformInteraction` をOverrideできることを確認する。
 
-### 5.2 拾うアクションを実装する
+### 5.2 `Content/Colours/Gimmick/BPC_PickupPlace.uasset` — `PerformInteraction`
 
-1. `PerformInteraction` の `Interactor` から、プレイヤー側の「所持状態管理」を取得する。
-2. 現在の所持Actorを取得する。
-3. 所持Actorが空の場合、`GetOwner()` を新しい所持Actorとして設定する。
-4. 所持設定に成功した場合は `true`、失敗した場合は `false` を返す。
-5. テストActorを作成または既存Actorを使用し、以下を設定する。
-   - `IColoursInteractable` を実装する
-   - `BPC_PickupPlace` を1個追加する
-   - プレイヤーのインタラクト判定に入るCollisionを持たせる
-6. PIEを開始し、対象Actorがインタラクト候補として選択されることを確認する。
-7. Fキーを押し、`PerformInteraction` が実行されることを確認する。
-8. プレイヤーの所持Actorが対象Actorになっていることを確認する。
-9. 既に所持Actorがある状態でもう一度別Actorを拾おうとし、2個同時所持にならないことを確認する。
+1. `PerformInteraction` をOverrideする。
+2. 引数 `Interactor` からプレイヤー側の「所持状態管理」を取得する。
+3. 現在の所持Actorを取得する。
+4. 所持Actorが空の場合、`GetOwner()` を新しい所持Actorとして設定する。
+5. 所持設定に成功した場合は `true`、失敗した場合は `false` を返す。
+6. Compileする。
 
-### 5.3 `Place` を作成する
+### 5.3 `Content/Colours/Gimmick/BPC_PickupPlace.uasset` — `Place`
 
-1. `BPC_PickupPlace` に Blueprint Callable の `Place` 関数を追加する。
-2. 引数に `Interactor`、戻り値に `bool` を持たせる。
+1. Blueprint Callable の `Place` 関数を追加する。
+2. 引数に `Interactor`、戻り値に `bool` を追加する。
 3. `Interactor` から「所持状態管理」を取得する。
 4. 現在の所持Actorを取得し、`GetOwner()` と一致していることを確認する。
 5. 一致している場合、現在の所持Actorを解除する。
-6. `GetOwner()` の現在のWorld Transformを保持したまま、保持先からDetachする。
-7. Detach直前のWorld Rotationを保存し、Detach後も同じ向きを維持する。
-8. 対象Actorで物理挙動を担当するComponentに対して Simulate Physics を有効にする。
+6. `GetOwner()` のWorld Transformを保持したまま、保持先からDetachする。
+7. Detach前のWorld Rotationを維持する。
+8. 対象Actorの物理挙動を担当するComponentの Simulate Physics を有効にする。
 9. 正常に置く処理を開始できた場合は `true` を返す。
+10. Compileする。
 
-### 5.4 置くアクションを確認する
+### 5.4 `Content/Colours/Gimmick/BP_TestInteractable.uasset` — テストActor設定
+
+1. `IColoursInteractable` が実装されていることを確認する。
+2. 既存の `BPC_TestInteract` を外し、`BPC_PickupPlace` を1個追加する。
+3. プレイヤーのインタラクト判定に入るCollisionが有効であることを確認する。
+4. Compileして保存する。
+
+### 5.5 `Content/Colours/Levels/Test/ThirdPersonMap.umap` — 拾うアクション確認
+
+1. `BP_TestInteractable` を配置する。
+2. PIEを開始し、対象Actorがインタラクト候補として選択されることを確認する。
+3. Fキーを押し、`BPC_PickupPlace.PerformInteraction` が実行されることを確認する。
+4. プレイヤーの所持Actorが対象Actorになっていることを確認する。
+5. 所持中に別のテストActorを拾おうとし、2個同時所持にならないことを確認する。
+
+### 5.6 `Content/Colours/Levels/Test/ThirdPersonMap.umap` — 置くアクション確認
 
 1. テストActorをプレイヤーの所持Actorにする。
-2. テスト用に `Place` を呼び出す。
-3. 実行後、プレイヤーの所持Actorが空になっていることを確認する。
-4. Actorが保持先からDetachされていることを確認する。
-5. Detach前後でWorld Rotationが変わっていないことを確認する。
+2. テスト用に `BPC_PickupPlace.Place` を呼び出す。
+3. プレイヤーの所持Actorが空になることを確認する。
+4. 対象Actorが保持先からDetachされることを確認する。
+5. Detach前後でWorld Rotationが変わらないことを確認する。
 6. Simulate Physicsが有効になり、Actorが落下を開始することを確認する。
-7. 「拾うアクション」「置くアクション」の終了条件をすべて満たしたら、それぞれのJira Taskへ確認結果を記録する。
+7. 「拾うアクション」「置くアクション」の終了条件をすべて確認する。
