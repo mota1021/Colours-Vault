@@ -42,20 +42,23 @@ Jiraでは「拾うアクション」「置くアクション」を別Taskとし
 
 ### 対象
 
-- プレイヤーの「所持状態管理」
-- 拾う／置く動作を確認するテストActor
+- `Content/Colours/Character/BP_ColoursPlayerCharacter.uasset`
+  - プレイヤーの所持状態管理との接続先
+- `Content/Colours/Gimmick/BP_TestInteractable.uasset`
+  - 拾う／置く動作の確認用Actor
+- `Content/Colours/Gimmick/BPC_TestInteract.uasset`
+  - `UColoursInteractableComponent` 派生BPの既存実装例
 
 ### 作成
 
-- `BPC_PickupPlace`
+- `Content/Colours/Gimmick/BPC_PickupPlace.uasset`
   - 親クラス: `UColoursInteractableComponent`
-  - 配置: `Content/Common/Interaction/`
 
 ## 5. 作業手順
 
 ### 5.1 `BPC_PickupPlace` を作成する
 
-1. `Content/Common/Interaction/` に Blueprint Component を作成する。
+1. `Content/Colours/Gimmick/` に Blueprint Component を作成する。
 2. 名前を `BPC_PickupPlace` とする。
 3. 親クラスに `UColoursInteractableComponent` を指定する。
 4. Compileして、`PerformInteraction` をOverrideできることを確認する。
